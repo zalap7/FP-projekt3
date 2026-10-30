@@ -1,0 +1,58 @@
+\documentclass[11pt, a4paper]{article}
+
+% Standardni paketi za slovenščino (delujejo s privzetim prevajalnikom v VS Code)
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[slovene]{babel}
+
+% Paket za nastavitev robov
+\usepackage[margin=2.5cm]{geometry}
+
+% Paketi za matematiko, sezname in hiperpovezave
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+% Pravilno oblikovan naslov dokumenta z razmakom
+\title{\textbf{Projekt 3: Barvanja brez konfliktov – A: eksaktne metode in gradniki} \\[0.5cm] \large Opis problema in načrt za nadaljnje delo}
+\author{Zala Perpar, Manca Zupančič, Gašper Počivavšek}
+\date{November 2026}
+
+\begin{document}
+
+\maketitle
+
+\section*{Opis problema}
+V okviru projekta bomo raziskovali barvanja vozlišč ravninskih grafov brez konfliktov (\textit{conflict-free colorings}). Naj bo $G$ graf. Barvanje vozlišč grafa $G$ (ne nujno pravo barvanje) je brez konfliktov glede na zaprte okolice, če se za vsako vozlišče $v$ v njegovi zaprti okolici $N[v] = N(v) \cup \{v\}$ vsaj ena barva pojavi natanko enkrat (je unikatna v tej okolici). Najmanjše število barv, potrebnih za takšno barvanje, označimo s $\chi_{iCFc}(G)$.
+
+Vsako pravo barvanje grafa je tudi barvanje brez konfliktov (saj je vsako vozlišče edino s svojo barvo znotraj lastne zaprte okolice), zato za vsak graf velja $\chi_{iCFc}(G) \le \chi(G)$. Posledično po izreku o štirih barvah velja $\chi_{iCFc}(G) \le 4$ za vsak ravninski graf $G$. Predhodne raziskave so pokazale, da za ravninske grafe zadoščajo tri barve ob predpostavki, da lahko nekatera vozlišča ostanejo neobarvana, vendar naš projekt obravnava izključno primere, kjer so obarvana vsa vozlišča grafa. Raziskovalci Fabrici, Lužar, Rindošová in Soták so postavili domnevo, da pri ravninskih grafih vedno zadoščajo 3 barve tudi takrat, ko so obarvana vsa vozlišča. Z uporabo umetne inteligence je bila ta domneva pred kratkim ovržena s konstrukcijo ravninskega grafa na 52 vozliščih, ki za barvanje brez konfliktov potrebuje 4 barve ($\chi_{iCFc}(G) = 4$). Nadaljnje računalniško iskanje je nato odkrilo še manjši protiprimer s 25 vozlišči in 55 povezavami. Po drugi strani pa pregled vseh možnosti kaže, da lahko vsak ravninski graf z do 12 vozlišči obarvamo z največ tremi barvami ($\chi_{iCFc}(G) \le 3$). Iz tega sledi, da ima najmanjši ravninski graf, ki potrebuje 4 barve za barvanje brez konfliktov ($\chi_{iCFc}(G) = 4$), med 13 in 25 vozlišč.
+
+Naš glavni cilj projekta je poiskati ravninski graf s $\chi_{iCFc}(G) = 4$, ki ima manj kot 25 vozlišč, ali pa podati dokaz, da tak graf ne obstaja.
+
+\section*{Načrt za nadaljnje delo}
+
+Delo smo razdelili na štiri glavne sklope, ki jih bomo izvedli s pomočjo eksaktnih metod in programskega okolja SageMath.
+
+\subsection*{1. Implementacija programa za ugotavljanje obarvljivosti}
+
+Najprej bomo implementirali program, ki bo z uporabo reševalnika SAT algoritemsko odločil, ali velja $\chi_{\mathrm{iCFc}}(G) \le 3$ za podan graf $G$. Delovanje programa bomo potrdili na znanem protiprimeru s 25 vozlišči, kjer mora algoritem potrditi, da je $\chi_{\mathrm{iCFc}}(G) = 4$. Prav tako bomo implementirali funkcijo, ki bo izračunala najmanjše število vozlišč brez unikatne barve v zaprti okolici $N[v]$ za vsa možna 3-barvanja.
+
+\subsection*{2. Izčrpno iskanje na majhnih ravninskih grafih}
+
+S pomočjo orodja \texttt{plantri} bomo izčrpno iskanje (sistematični pregled vseh možnih grafov določenega reda) razširili na specifične podrazrede ravninskih grafov z 13 vozlišči. Ker je celoten prostor vseh teh grafov prevelik, se bomo osredotočili na 3-povezane ravninske grafe (grafi, ki ostanejo povezani, tudi če iz njih odstranimo poljubni dve vozlišči in vse povezave, ki so vezane nanju). Za optimizacijo bomo najprej izvedli hitro požrešno barvanje in SAT reševalnik pognali le za preostale grafe. Neposredno generiranje vseh 2-povezanih grafov z 13 vozlišči pa je neizvedljivo (okoli $10^{10}$ grafov), zato bomo manjše razrede gradili drugače: izhodišče bodo 3-povezani ravninski grafi z $13 - k$ vozlišči, katerim bomo dodali $k$ vozlišč stopnje 2 tako, da bomo vsako novo vozlišče vpeli med dve sosednji vozlišči na robu istega lica.
+
+\subsection*{3. Iskanje manjših gradnikov}
+
+Ravninski graf $H$ s povezavo $xy$ je \emph{forcing gadget}, če v $H$ ne obstaja 3-barvanje $c$, za katero velja hkrati:
+\begin{enumerate}
+    \item[(i)] $c(x) = c(y)$,
+    \item[(ii)] vsako vozlišče grafa $H$, različno od $x$ in $y$, ima v svoji zaprti okolici unikatno barvo,
+    \item[(iii)] neka barva se v $N_H[x]$ pojavi največ enkrat in neka barva se v $N_H[y]$ pojavi največ enkrat.
+\end{enumerate}
+Če so \emph{forcing gadgets} pripeti na vse povezave ravninskega grafa $G_0$ s kromatičnim številom $\chi(G_0) = 4$, je vsako barvanje brez konfliktov na dobljenem grafu pravo na $G_0$, torej $\chi_{iCFc}(G) = 4$. 
+
+Sistematično bomo (s pomočjo reševalnika SAT) poiskali vse majhne forcing gadgets, ki jih je mogoče narisati v ploskvi, incidenčni s povezavo $xy$, ter določili najmanjše med njimi. Proučili bomo tudi gradnike, pripete na tri ali več vozlišč, kot je to storjeno v grafu s 25 vozlišči. Nato jih bomo pripeli na $K_4$ ali druge majhne ravninske grafe s kromatičnim številom 4 (na primer liha kolesa) ter izračunali red nastalih grafov.
+
+\subsection*{4. Krčenje znanega protiprimera}
+Postopoma bomo odstranjevali vozlišča in povezave grafa s 25 vozlišči (ter grafov iz 3. točke), dokler bo veljalo $\chi_{iCFc}(G) = 4$, ter poiskali vse minimalne grafe, dobljene na ta način. O svojih rezultatih bomo poročali v končnem poročilu.
+\end{document}
